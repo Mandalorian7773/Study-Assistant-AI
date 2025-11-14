@@ -51,14 +51,25 @@ router.get('/', async (req, res, next) => {
     try {
       aiResponse = await generateStudyContent(wikiContent, validatedMode);
     } catch (aiError) {
-      // Handle AI service errors
-      if (
-        aiError.message.includes('API key') ||
-        aiError.message.includes('rate limit')
-      ) {
+      // Log the error for debugging
+      console.error('Study generation error:', {
+        topic: validatedTopic,
+        mode: validatedMode,
+        error: aiError.message,
+      });
+
+      // Handle AI service errors with better error messages
+      if (aiError.message.includes('API key')) {
         throw new AppError(aiError.message, 502);
       }
-      throw new AppError('Failed to generate study content.', 502);
+      if (aiError.message.includes('rate limit')) {
+        throw new AppError(aiError.message, 429);
+      }
+      if (aiError.message.includes('timeout')) {
+        throw new AppError(aiError.message, 504);
+      }
+      // Return the actual error message for better debugging
+      throw new AppError(aiError.message || 'Failed to generate study content.', 502);
     }
 
     // Format and return response

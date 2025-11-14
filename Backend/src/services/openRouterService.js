@@ -84,7 +84,7 @@ Requirements:
           'X-Title': 'Smart Study Assistant',
           'Content-Type': 'application/json',
         },
-        timeout: 30000, // 30 second timeout
+        timeout: 60000, // 60 second timeout (increased for slower models)
       }
     );
 
@@ -112,23 +112,44 @@ Requirements:
 
     return parsedResponse;
   } catch (error) {
+    // Enhanced error logging
+    console.error('OpenRouter API Error:', {
+      message: error.message,
+      code: error.code,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+    });
+
     if (error.response) {
       const statusCode = error.response.status;
+      const errorData = error.response.data;
+      
       if (statusCode === 401 || statusCode === 403) {
-        throw new Error('Invalid OpenRouter API key.');
+        throw new Error('Invalid OpenRouter API key. Please check your API key configuration.');
       }
       if (statusCode === 429) {
-        throw new Error('OpenRouter API rate limit exceeded.');
+        throw new Error('OpenRouter API rate limit exceeded. Please try again later.');
       }
-      throw new Error(`OpenRouter API error: ${error.response.statusText}`);
+      if (statusCode === 400) {
+        const errorMsg = errorData?.error?.message || error.response.statusText;
+        throw new Error(`OpenRouter API error: ${errorMsg}. The model might not be available or the request format is invalid.`);
+      }
+      if (statusCode >= 500) {
+        throw new Error('OpenRouter API service is currently unavailable. Please try again later.');
+      }
+      throw new Error(`OpenRouter API error: ${error.response.statusText} (${statusCode})`);
     }
     if (error.code === 'ECONNABORTED') {
-      throw new Error('OpenRouter API request timeout.');
+      throw new Error('OpenRouter API request timeout. The request took too long to complete.');
+    }
+    if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+      throw new Error('Failed to connect to OpenRouter API. Please check your internet connection.');
     }
     if (error.message.includes('parse') || error.message.includes('JSON')) {
       throw error;
     }
-    throw new Error('Failed to generate study content from AI.');
+    throw new Error(`Failed to generate study content: ${error.message}`);
   }
 }
 
