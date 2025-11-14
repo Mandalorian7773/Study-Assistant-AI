@@ -15,4 +15,19 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Ensure proper MIME types
+    rollupOptions: {
+      output: {
+        // Ensure proper chunking
+        manualChunks: undefined,
+      },
+    },
+    // Ensure proper asset handling
+    assetsInlineLimit: 4096,
+  },
+  // Ensure proper MIME types for module scripts
+  optimizeDeps: {
+    include: ["react", "react-dom"],
+  },
 }));

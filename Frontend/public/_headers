@@ -1,0 +1,16 @@
+# Netlify headers file
+/*.js
+  Content-Type: application/javascript
+
+/*.mjs
+  Content-Type: application/javascript
+
+/assets/*.js
+  Content-Type: application/javascript
+
+/assets/*.mjs
+  Content-Type: application/javascript
+
+/index.html
+  X-Content-Type-Options: nosniff
+
