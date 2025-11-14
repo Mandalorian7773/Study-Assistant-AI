@@ -3,7 +3,8 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "./ui/alert";
 
 interface TopicInputProps {
   onSubmit: (topic: string, mathMode: boolean) => void;
@@ -13,11 +14,30 @@ interface TopicInputProps {
 export const TopicInput = ({ onSubmit, isLoading }: TopicInputProps) => {
   const [topic, setTopic] = useState("");
   const [mathMode, setMathMode] = useState(false);
+  const [warning, setWarning] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (topic.trim()) {
-      onSubmit(topic.trim(), mathMode);
+    const trimmedTopic = topic.trim();
+    
+    // Check for mathematical equations
+    if (trimmedTopic.includes("=") && trimmedTopic.includes("x")) {
+      setWarning("It looks like you're entering a math equation. Try entering a broader topic like 'Algebra' or 'Linear Equations' instead.");
+      return;
+    }
+    
+    // Clear warning and submit
+    setWarning("");
+    if (trimmedTopic) {
+      onSubmit(trimmedTopic, mathMode);
+    }
+  };
+
+  const handleTopicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTopic(e.target.value);
+    // Clear warning when user starts typing
+    if (warning) {
+      setWarning("");
     }
   };
 
@@ -31,6 +51,13 @@ export const TopicInput = ({ onSubmit, isLoading }: TopicInputProps) => {
           </h2>
         </div>
         
+        {warning && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{warning}</AlertDescription>
+          </Alert>
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="topic" className="text-base">Topic</Label>
@@ -39,7 +66,7 @@ export const TopicInput = ({ onSubmit, isLoading }: TopicInputProps) => {
               type="text"
               placeholder="e.g., Photosynthesis, World War II, Calculus..."
               value={topic}
-              onChange={(e) => setTopic(e.target.value)}
+              onChange={handleTopicChange}
               disabled={isLoading}
               className="h-12 text-base"
             />

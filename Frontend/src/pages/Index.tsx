@@ -71,14 +71,21 @@ const Index = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch study material");
+        throw new Error(`Failed to fetch study material (Status: ${response.status})`);
       }
 
       const data = await response.json();
 
       // Check if API returned an error
       if (data.error) {
-        throw new Error(data.error);
+        let errorMessage = data.error;
+        // Provide more helpful error messages for common issues
+        if (errorMessage.includes("Topic not found")) {
+          errorMessage = `We couldn't find information about "${topic}". Try a different topic or check your spelling.`;
+        } else if (errorMessage.includes("Gemini API")) {
+          errorMessage = "The AI service is temporarily unavailable. Please try again in a few minutes.";
+        }
+        throw new Error(errorMessage);
       }
 
       setStudyData(data);
