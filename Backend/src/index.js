@@ -52,10 +52,9 @@ app.listen(PORT, () => {
   console.log(`📚 Study endpoint: http://localhost:${PORT}/study?topic=<topic>&mode=<mode>`);
   
   // Warn if API key is not set
-  if (!process.env.OPENROUTER_API_KEY) {
-    console.warn('⚠️  WARNING: OPENROUTER_API_KEY is not set in environment variables.');
+  if (!process.env.GEMINI_API_KEY) {
+    console.warn('⚠️  WARNING: GEMINI_API_KEY is not set in environment variables.');
   }
 });
 
 module.exports = app;
-

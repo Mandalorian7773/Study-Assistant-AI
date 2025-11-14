@@ -1,25 +1,20 @@
 /**
- * OpenRouter AI API service
+ * Gemini AI API service
  */
 const axios = require('axios');
 
-const OPENROUTER_API_BASE = 'https://openrouter.ai/api/v1/chat/completions';
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent';
 
 /**
- * Generates study content using OpenRouter AI
+ * Generates study content using Gemini AI
  * @param {string} wikiContent - Wikipedia content about the topic
  * @param {string} mode - 'normal' or 'math'
  * @returns {Promise<Object>} - Parsed AI response
  * @throws {Error} - If AI request fails
  */
 async function generateStudyContent(wikiContent, mode) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || 'google/gemini-flash-1.5';
+  const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyCTQUIv1-ibtZTQoSf6ZjLNBm-o6lxQUeM';
   const deployedUrl = process.env.DEPLOYED_URL || 'http://localhost:3000';
-
-  if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY is not configured.');
-  }
 
   // Build prompt based on mode
   let prompt = `You are an educational AI assistant. Using this topic content:
@@ -65,34 +60,31 @@ Requirements:
 
   try {
     const response = await axios.post(
-      OPENROUTER_API_BASE,
+      `${GEMINI_API_BASE}?key=${apiKey}`,
       {
-        model,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2000,
+        }
       },
       {
         headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'HTTP-Referer': deployedUrl,
-          'X-Title': 'Smart Study Assistant',
           'Content-Type': 'application/json',
         },
-        timeout: 60000, // 60 second timeout (increased for slower models)
+        timeout: 60000, // 60 second timeout
       }
     );
 
-    if (!response.data || !response.data.choices || !response.data.choices[0]) {
-      throw new Error('Invalid response from OpenRouter API.');
+    if (!response.data || !response.data.candidates || !response.data.candidates[0]) {
+      throw new Error('Invalid response from Gemini API.');
     }
 
-    const aiResponse = response.data.choices[0].message.content;
+    const aiResponse = response.data.candidates[0].content.parts[0].text;
 
     // Parse JSON response (handle markdown code blocks if present)
     let parsedResponse;
@@ -113,7 +105,7 @@ Requirements:
     return parsedResponse;
   } catch (error) {
     // Enhanced error logging
-    console.error('OpenRouter API Error:', {
+    console.error('Gemini API Error:', {
       message: error.message,
       code: error.code,
       status: error.response?.status,
@@ -126,25 +118,25 @@ Requirements:
       const errorData = error.response.data;
       
       if (statusCode === 401 || statusCode === 403) {
-        throw new Error('Invalid OpenRouter API key. Please check your API key configuration.');
+        throw new Error('Invalid Gemini API key. Please check your API key configuration.');
       }
       if (statusCode === 429) {
-        throw new Error('OpenRouter API rate limit exceeded. Please try again later.');
+        throw new Error('Gemini API rate limit exceeded. Please try again later.');
       }
       if (statusCode === 400) {
         const errorMsg = errorData?.error?.message || error.response.statusText;
-        throw new Error(`OpenRouter API error: ${errorMsg}. The model might not be available or the request format is invalid.`);
+        throw new Error(`Gemini API error: ${errorMsg}. The model might not be available or the request format is invalid.`);
       }
       if (statusCode >= 500) {
-        throw new Error('OpenRouter API service is currently unavailable. Please try again later.');
+        throw new Error('Gemini API service is currently unavailable. Please try again later.');
       }
-      throw new Error(`OpenRouter API error: ${error.response.statusText} (${statusCode})`);
+      throw new Error(`Gemini API error: ${error.response.statusText} (${statusCode})`);
     }
     if (error.code === 'ECONNABORTED') {
-      throw new Error('OpenRouter API request timeout. The request took too long to complete.');
+      throw new Error('Gemini API request timeout. The request took too long to complete.');
     }
     if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
-      throw new Error('Failed to connect to OpenRouter API. Please check your internet connection.');
+      throw new Error('Failed to connect to Gemini API. Please check your internet connection.');
     }
     if (error.message.includes('parse') || error.message.includes('JSON')) {
       throw error;
@@ -240,4 +232,3 @@ module.exports = {
   generateStudyContent,
   formatStudyResponse,
 };
-

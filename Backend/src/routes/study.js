@@ -9,7 +9,7 @@ const { fetchTopicContent } = require('../services/wikipediaService');
 const {
   generateStudyContent,
   formatStudyResponse,
-} = require('../services/openRouterService');
+} = require('../services/geminiService');
 
 /**
  * GET /study
@@ -46,7 +46,7 @@ router.get('/', async (req, res, next) => {
       throw new AppError('Failed to fetch topic information.', 500);
     }
 
-    // Generate study content using OpenRouter AI
+    // Generate study content using Gemini AI
     let aiResponse;
     try {
       aiResponse = await generateStudyContent(wikiContent, validatedMode);
@@ -86,4 +86,3 @@ router.get('/', async (req, res, next) => {
 });
 
 module.exports = router;
-
